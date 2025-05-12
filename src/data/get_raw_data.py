@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import re
 
+from src.data.feature_engineering import add_terrain_features_to_station_df
+
+
 def sort_columns(columns):
     # 고정 prefix가 아닌 컬럼은 먼저 수집
     fixed_columns = [col for col in columns if not re.search(r'_\d+$', col)]
@@ -63,6 +66,7 @@ def bin_cloud_height(df):
 
     return df
 
+# TODO wind direction을 사용할 수도 있음. 성능 개선 필요시..
 # def bin_wind_direction(df):
 #     direction_bins = [0, 45, 90, 135, 180, 225, 270, 315, 360]
 #     direction_labels = ['북', '북동', '동', '남동', '남', '남서', '서', '북서', '북']
@@ -95,6 +99,8 @@ def get_raw_data():
 
     station_df.rename(columns={'지점': 'station'}, inplace=True)
     station_df.set_index('station', inplace=True)
+    station_df = add_terrain_features_to_station_df(station_df)
+    station_df = station_df[station_df.종료일 != '2019-07-24']
 
     return train_df, station_df
 
