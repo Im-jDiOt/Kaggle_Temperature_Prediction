@@ -3,12 +3,12 @@ import pandas as pd
 import os
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from src.data.get_raw_data import get_raw_data, bin_cloud_height
-from src.data.preprocess_data import EnsembleImputer, PhysicsImputer, InterpolationImputer, CorrelationImputer, \
+from src.data.impute_missing import EnsembleImputer, PhysicsImputer, InterpolationImputer, CorrelationImputer, \
     ModelImputer, GPUModelImputer
 
 # 1. 데이터 로드
 X_full, station_df = get_raw_data()
-X = X_full.drop(columns=['id', 'station_name','date', 'climatology_temp', 'target','next_day_avg_temp'])
+X = X_full.drop(columns=['id', 'station_name','date', 'climatology_temp', 'target'])
 print("=== data loaded ===")
 
 # 2. 결측치 생성

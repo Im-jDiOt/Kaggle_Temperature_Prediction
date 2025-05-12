@@ -229,28 +229,6 @@ def add_station_specific_features(df, station_df):
 
     return df
 
-def add_terrain_features_to_station_df(station_df):
-    """관측소 데이터프레임에 지형 정보(바다, 산, 도시, 강) 추가"""
-    print("관측소 지형 정보 추가 중...")
-
-    # 지형 정보 데이터 정의
-    terrain_data = {
-        98: {'바다': 0, '산': 1, '도시': 1, '강': 1},
-        99: {'바다': 0, '산': 0, '도시': 0, '강': 1},
-        201: {'바다': 1, '산': 1, '도시': 0, '강': 0},
-        112: {'바다': 1, '산': 0, '도시': 1, '강': 0},
-        203: {'바다': 0, '산': 0, '도시': 0, '강': 0},
-        202: {'바다': 0, '산': 1, '도시': 1, '강': 1},
-        108: {'바다': 0, '산': 1, '도시': 1, '강': 1},
-        119: {'바다': 0, '산': 0, '도시': 1, '강': 0}
-    }
-
-    # 데이터프레임에 새 컬럼 추가
-    for feature in ['바다', '산', '도시', '강']:
-        station_df[feature] = station_df.index.map(lambda x: terrain_data.get(x, {}).get(feature, 0))
-
-    return station_df
-
 def create_all_features(df, station_df):
     """모든 파생 변수를 생성하는 함수"""
     print("=== 파생 변수 생성 시작 ===")
@@ -277,7 +255,7 @@ def main():
     df = pd.read_csv(input_file)
 
     _, station_df = get_raw_data()
-    station_df = add_terrain_features_to_station_df(station_df)
+    # station_df = add_terrain_features_to_station_df(station_df) -> get_raw_data에서 이미 추가됨
 
 
     print(f"데이터 로드 완료: {df.shape}")

@@ -2,9 +2,6 @@ import pandas as pd
 import numpy as np
 import re
 
-from src.data.feature_engineering import add_terrain_features_to_station_df
-
-
 def sort_columns(columns):
     # 고정 prefix가 아닌 컬럼은 먼저 수집
     fixed_columns = [col for col in columns if not re.search(r'_\d+$', col)]
@@ -26,10 +23,10 @@ def sort_columns(columns):
 
     return sorted_columns
 
-def insert_next_day_avg_temp(df):
-    # 다음 날 평균 기온 계산
-    df.insert(4, 'next_day_avg_temp', df['target'] + df['climatology_temp'])
-    return df
+# def insert_next_day_avg_temp(df):
+#     # 다음 날 평균 기온 계산
+#     df.insert(4, 'next_day_avg_temp', df['target'] + df['climatology_temp'])
+#     return df
 
 
 def sundur_simple_impute(df):
@@ -82,15 +79,35 @@ def bin_cloud_height(df):
 #
 #     return df
 
+def add_terrain_features_to_station_df(station_df):
+    """관측소 데이터프레임에 지형 정보(바다, 산, 도시, 강) 추가"""
+    print("관측소 지형 정보 추가 중...")
 
+    # 지형 정보 데이터 정의
+    terrain_data = {
+        98: {'바다': 0, '산': 1, '도시': 1, '강': 1},
+        99: {'바다': 0, '산': 0, '도시': 0, '강': 1},
+        201: {'바다': 1, '산': 1, '도시': 0, '강': 0},
+        112: {'바다': 1, '산': 0, '도시': 1, '강': 0},
+        203: {'바다': 0, '산': 0, '도시': 0, '강': 0},
+        202: {'바다': 0, '산': 1, '도시': 1, '강': 1},
+        108: {'바다': 0, '산': 1, '도시': 1, '강': 1},
+        119: {'바다': 0, '산': 0, '도시': 1, '강': 0}
+    }
 
-def get_raw_data():
+    # 데이터프레임에 새 컬럼 추가
+    for feature in ['바다', '산', '도시', '강']:
+        station_df[feature] = station_df.index.map(lambda x: terrain_data.get(x, {}).get(feature, 0))
+
+    return station_df
+
+def get_raw_data(data_type='train'):
     # 데이터 로드
-    train_df = pd.read_csv(r'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\raw\train_dataset.csv')
+    train_df = pd.read_csv(fr'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\raw\{data_type}_dataset.csv')
     station_df = pd.read_csv(r'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\raw\station_info.csv')
 
     train_df = train_df[sort_columns(train_df.columns)]
-    train_df = insert_next_day_avg_temp(train_df)
+    # train_df = insert_next_day_avg_temp(train_df)
     train_df = train_df.replace(-9999, np.nan)
     train_df = sundur_simple_impute(train_df)
     train_df = drop_visibility(train_df)

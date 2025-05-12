@@ -1,17 +1,14 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from src.data.get_raw_data import get_raw_data
-import os
-
 
 # 1. 데이터 로드
 X_full, station_df = get_raw_data()
-X = X_full.drop(columns=['id', 'station_name', 'date', 'climatology_temp', 'target', 'next_day_avg_temp'])
+X = X_full.drop(columns=['id', 'station_name', 'date', 'climatology_temp', 'target'])
 
 # 2. 저장된 임퓨팅 데이터와 마스크 불러오기
-X_imputed = pd.read_csv(r'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\processed\imputed_data.csv')
+X_imputed = pd.read_csv(r'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\processed\imputed_train_data.csv')
 mask = np.load(r'C:\Users\USER\PycharmProjects\ML_kaggle\src\data\processed\mask.npy')
 
 # 3. 컬럼별 평가
@@ -30,10 +27,17 @@ for col_idx, column in enumerate(X.columns):
             original_value = X.iloc[i, col_idx]
             imputed_value = X_imputed.iloc[i, col_idx]
 
-            # 원본 값이 NaN이 아닌 경우만 평가에 포함
+            # 원본값과 임퓨팅값이 모두 숫자인 경우만 평가에 포함
             if not pd.isna(original_value) and not pd.isna(imputed_value):
-                original_values.append(original_value)
-                imputed_values.append(imputed_value)
+                try:
+                    # 명시적 숫자 변환 시도
+                    float_original = float(original_value)
+                    float_imputed = float(imputed_value)
+                    original_values.append(float_original)
+                    imputed_values.append(float_imputed)
+                except (ValueError, TypeError):
+                    # 숫자로 변환 불가능한 경우 건너뜀
+                    continue
 
     # 메트릭 계산
     count = len(original_values)
@@ -94,18 +98,3 @@ for idx, row in valid_metrics.iterrows():
     categories[category]['count'] += row['count']
     categories[category]['mae_sum'] += row['mae'] * row['count']
     categories[category]['rmse_sum'] += row['rmse'] * row['count']
-
-# 카테고리별 평균 계산
-category_metrics = []
-for category, data in categories.items():
-    if data['count'] > 0:
-        category_metrics.append({
-            'category': category,
-            'count': data['count'],
-            'mae': data['mae_sum'] / data['count'],
-            'rmse': data['rmse_sum'] / data['count']
-        })
-
-category_df = pd.DataFrame(category_metrics).sort_values(by='rmse', ascending=False)
-print("\n=== 카테고리별 임퓨팅 성능 ===")
-print(category_df)
